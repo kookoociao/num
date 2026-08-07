@@ -1,0 +1,505 @@
+<!--
+  VEDIC NUMEROLOGY — clean rebuild following the Kalika method exactly.
+  Pipeline: birth details -> Emotional/Life numbers (date) + Supporting number
+  (Chaldean letters) -> Fate (D1) & Freewill (D9) charts from real astronomy ->
+  signed numeric charts via the planet-sign relationship table (ruling x2+,
+  intimate x3+, good +, bad -, worst x2-) -> merged Lo Shu numerology grid ->
+  winning patterns -> remedies for weak/missing numbers.
+  CONFIG below: set previewMode=false, your checkout link and access code before going live.
+-->
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vedic Numerology Reading</title>
+<meta name="description" content="Your Vedic numerology reading — emotional, life and supporting numbers, fate and freewill charts, your numerology grid, winning patterns and remedies.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23835ff4'/%3E%3Cstop offset='1' stop-color='%230fa3a0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M38 22 A16 16 0 1 0 38 50 A22 22 0 0 1 38 22 Z' fill='url(%23g)'/%3E%3Cpath d='M53 22 L54.3 25.7 L58 27 L54.3 28.3 L53 32 L51.7 28.3 L48 27 L51.7 25.7 Z' fill='%23c9a24b'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+ :root{--ink:#272540;--ink2:#605d80;--line:rgba(120,110,180,.22);--glass:rgba(255,255,255,.56);--glass2:rgba(255,255,255,.4);
+   --field:rgba(255,255,255,.7);--violet:#7a5cf0;--violet2:#9b7bff;--teal:#0e9e8c;--amber:#c98a1f;--red:#d6455f;
+   --grad:linear-gradient(135deg,#835ff4,#b07cff);--serif:"Cormorant Garamond",Georgia,serif}
+ *{box-sizing:border-box}
+ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#ecf0fb;min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.55}
+ .bg{position:fixed;inset:0;overflow:hidden;z-index:0}
+ .blob{position:absolute;border-radius:50%;filter:blur(72px);opacity:.5;animation:float 20s ease-in-out infinite}
+ .b1{width:440px;height:440px;background:#b6a0ff;top:-90px;left:-70px}
+ .b2{width:380px;height:380px;background:#ffb0d8;top:18%;right:-90px;animation-delay:-5s}
+ .b3{width:460px;height:460px;background:#96d6ff;bottom:-120px;left:8%;animation-delay:-10s}
+ @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(22px,-28px) scale(1.07)}}
+ .wrap{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:34px 18px 80px}
+ header{text-align:center;margin-bottom:6px}
+ .logo{width:64px;height:64px;display:block;margin:0 auto 10px;filter:drop-shadow(0 7px 18px rgba(130,95,244,.3))}
+ .brandtitle{font-family:var(--serif);font-size:42px;font-weight:600;letter-spacing:1px;margin:0;line-height:1.05;
+   background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+ .brandsub{color:var(--ink2);font-size:11.5px;letter-spacing:3.5px;text-transform:uppercase;margin:8px 0 0;font-weight:600}
+ .divider{display:flex;align-items:center;justify-content:center;gap:12px;max-width:230px;margin:16px auto 22px;color:var(--violet2);font-size:13px}
+ .divider::before,.divider::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+ .glass{background:var(--glass);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+   border:1px solid rgba(255,255,255,.65);box-shadow:0 10px 40px rgba(95,85,160,.13);border-radius:22px;padding:22px;margin:15px 0;
+   overflow-wrap:break-word;min-width:0;transition:box-shadow .25s ease,transform .25s ease}
+ .glass:hover{box-shadow:0 18px 52px rgba(95,85,160,.2);transform:translateY(-2px)}
+ .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--violet);margin:0 0 3px}
+ h2{font-family:var(--serif);font-size:23px;font-weight:600;margin:0 0 10px;letter-spacing:.2px}
+ .whatis{font-size:12px;color:var(--ink2);margin:-4px 0 13px;line-height:1.55}
+ label{display:block;font-size:12px;color:var(--ink2);margin:11px 0 5px;font-weight:600}
+ input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-size:15px;font-family:inherit;font-weight:600}
+ input::placeholder{color:#b3afd2;font-style:italic;opacity:1;font-weight:400}
+ select.ph{color:#b3afd2;font-style:italic;font-weight:400}
+ input:focus,select:focus{outline:2px solid var(--violet2);outline-offset:1px;border-color:transparent}
+ .row{display:flex;gap:9px}.row>div{flex:1}
+ .hint{font-size:11.5px;color:var(--ink2);margin-top:5px}
+ button{cursor:pointer;border:none;font-weight:700;border-radius:13px;transition:.16s;font-family:inherit}
+ .go{width:100%;margin-top:18px;padding:14px;font-size:15.5px;color:#fff;background:var(--grad);box-shadow:0 8px 22px rgba(130,95,244,.35)}
+ .go:hover{transform:translateY(-1px)}
+ .err{color:var(--red);font-size:13px;min-height:16px;margin-top:6px}
+ .nums{display:flex;gap:11px;flex-wrap:wrap}
+ .num{flex:1;min-width:140px;background:var(--glass2);border:1px solid rgba(255,255,255,.6);border-radius:16px;padding:15px;text-align:center}
+ .num .v{font-size:32px;font-weight:780;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+ .num .t{font-size:11px;color:var(--violet);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
+ .num .d{font-size:11px;color:var(--ink2);margin-top:3px}
+ .charts{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+ .chartbox{flex:1;min-width:260px}
+ .clab{text-align:center;font-weight:750;letter-spacing:.5px;margin-bottom:7px;font-size:14px}
+ .grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(56px,auto));
+   border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line)}
+ .cell{border:.5px solid var(--line);padding:3px 4px;font-size:11px;position:relative;background:rgba(255,255,255,.34)}
+ .cell .sn{position:absolute;top:2px;right:4px;font-size:8px;color:var(--ink2)}
+ .cell .pl{color:var(--ink);font-weight:700;line-height:1.35;margin-top:10px}
+ .cell .pl .pos{color:var(--teal)}.cell .pl .neg{color:var(--red)}
+ .cell.lagna{background:rgba(122,92,240,.14)}
+ .center{display:flex;align-items:center;justify-content:center;font-weight:750;background:rgba(255,255,255,.2)}
+ .legend{text-align:center;color:var(--ink2);font-size:11px;margin-top:6px}
+ .loshu{display:grid;grid-template-columns:repeat(3,1fr);max-width:360px;margin:0 auto;gap:7px}
+ .lc{background:var(--glass2);border:1px solid var(--line);border-radius:12px;padding:9px 5px;text-align:center;min-height:76px}
+ .lc.pos{border-color:rgba(14,158,140,.5);background:rgba(14,158,140,.08)}
+ .lc.neg{border-color:rgba(214,69,95,.45);background:rgba(214,69,95,.07)}
+ .lc.miss{opacity:.75}
+ .lc .n{font-size:18px;font-weight:780;color:var(--violet)}.lc.miss .n{color:#b6b2cf}
+ .lc .tok{font-size:11.5px;font-weight:700;line-height:1.3;min-height:15px}
+ .lc .tok .pos{color:var(--teal)}.lc .tok .neg{color:var(--red)}
+ .lc .pn{font-size:9px;color:var(--ink2)}
+ .kv{font-size:13.6px;margin:6px 0}.kv b{color:var(--violet)}
+ .lead{color:var(--violet);font-size:12.5px;font-weight:600;margin:10px 0 3px}
+ .sec p{margin:4px 0;font-size:13.4px}
+ .line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;border-radius:11px;margin:4px 0;background:var(--glass2);font-size:13px}
+ .line.on{background:rgba(14,158,140,.1);border:1px solid rgba(14,158,140,.35)}
+ .line .nm{font-weight:700}.line.on .nm{color:var(--teal)}
+ .line .st{font-size:11px;color:var(--ink2)}
+ .rem{border-left:2px solid var(--violet2);padding:2px 0 2px 12px;margin:12px 0}
+ .rem h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;color:var(--violet)}
+ .rem p{margin:3px 0;font-size:13px}.rem b{color:var(--ink)}
+ .lock{text-align:center;padding:26px 18px}
+ .price{font-size:30px;font-weight:780;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+ .buy{margin:12px 0 4px;padding:13px 26px;font-size:15px;color:#fff;background:var(--grad);box-shadow:0 8px 22px rgba(130,95,244,.35)}
+ .unlockrow{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}.unlockrow input{max-width:160px}
+ .small{padding:11px 15px;font-size:14px;background:rgba(255,255,255,.7);color:var(--ink);border:1px solid var(--line)}
+ .hidden{display:none}
+ .place{display:block;width:100%;text-align:left;padding:9px 12px;margin:5px 0;border-radius:10px;background:var(--glass2);border:1px solid var(--line);color:var(--ink);font-size:13.5px;font-weight:600}
+ .place:hover{border-color:var(--violet2);color:var(--violet)}
+ .place small{color:var(--ink2);font-weight:400}
+ #pickmap{height:260px;border-radius:14px;border:1px solid var(--line);overflow:hidden}
+ .lc.neu{background:#fff;border-color:var(--line)}
+ #results{animation:fade .5s ease}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+ @media(prefers-reduced-motion:reduce){#results{animation:none}.blob{animation:none}}
+ @media(max-width:560px){.wrap{padding:22px 13px 60px}.brandtitle{font-size:34px}h2{font-size:20px}
+   .glass{padding:18px;border-radius:18px}.charts{flex-direction:column}.chartbox{min-width:0;width:100%}
+   .num{min-width:calc(50% - 6px)}}
+ @media print{body{background:#fff}.bg,.go,.lock,#form-card{display:none!important}
+   .glass{background:#fff;border:1px solid #e2e0ee;box-shadow:none;backdrop-filter:none}
+   .num,.lc,.line,.cell{background:#fff!important}.brandtitle,.num .v,.price{-webkit-text-fill-color:#7a5cf0}}
+</style>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="wrap">
+ <header>
+   <svg viewBox="0 0 72 72" class="logo" xmlns="http://www.w3.org/2000/svg">
+     <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#835ff4"/><stop offset="1" stop-color="#0fa3a0"/></linearGradient></defs>
+     <circle cx="36" cy="36" r="30" fill="none" stroke="url(#lg)" stroke-width="1.4" opacity=".9"/>
+     <circle cx="36" cy="36" r="23" fill="none" stroke="url(#lg)" stroke-width="1" stroke-dasharray="1.5 5" opacity=".45"/>
+     <path d="M38 22 A16 16 0 1 0 38 50 A22 22 0 0 1 38 22 Z" fill="url(#lg)"/>
+     <path d="M53 22 L54.3 25.7 L58 27 L54.3 28.3 L53 32 L51.7 28.3 L48 27 L51.7 25.7 Z" fill="#c9a24b"/>
+     <circle cx="50" cy="47" r="1.5" fill="#c9a24b"/><circle cx="24" cy="52" r="1.1" fill="#c9a24b"/>
+   </svg>
+   <h1 class="brandtitle">Vedic Numerology</h1>
+   <p class="brandsub">Numbers &middot; Charts &middot; Winning Patterns</p>
+   <div class="divider">&#10022;</div>
+ </header>
+
+ <div class="glass" id="form-card">
+   <p class="eyebrow">Your details</p>
+   <label>Full name (as per records)</label><input id="name" placeholder="e.g. Prabhu" autocomplete="off">
+   <div class="row">
+     <div><label>Day</label><input id="day" type="number" min="1" max="31" placeholder="18"></div>
+     <div><label>Month</label><select id="month"></select></div>
+     <div><label>Year</label><input id="year" type="number" min="1900" max="2026" placeholder="1972"></div>
+   </div>
+   <div class="row">
+     <div><label>Hour (24h)</label><input id="hour" type="number" min="0" max="23" placeholder="9"></div>
+     <div><label>Minute</label><input id="minute" type="number" min="0" max="59" placeholder="30"></div>
+   </div>
+   <p class="hint">Time and place set your Ascendant and charts precisely. Unknown time? Use 12:00.</p>
+   <label>Birth place</label>
+   <div class="row"><div style="flex:3"><input id="placeq" placeholder="Type a city, e.g. Shah Alam" autocomplete="off"></div>
+     <div style="flex:1"><button type="button" class="small" style="width:100%;padding:11px 8px" onclick="searchPlace()">Search</button></div></div>
+   <div id="placeresults"></div>
+   <div id="placesel" class="hint" style="color:var(--teal);font-weight:600"></div>
+   <p class="hint">Search finds any city worldwide with exact coordinates. <a href="#" onclick="toggleManual();return false" style="color:var(--violet)">Or enter coordinates manually</a></p>
+   <div id="customgeo" class="hidden">
+     <p class="hint" style="margin:8px 0 6px">&#128205; Tap the map on your birth place &mdash; the coordinates fill in automatically.</p>
+     <div id="pickmap"></div>
+     <div class="row" style="margin-top:8px">
+     <div><label>Latitude</label><input id="lat" type="number" step="0.0001"></div>
+     <div><label>Longitude</label><input id="lon" type="number" step="0.0001"></div>
+     <div><label>UTC offset</label><input id="tz" type="number" step="0.5"></div></div>
+     <p class="hint">The UTC offset is estimated from the pin &mdash; adjust if needed (Malaysia = 8; add +1 for daylight saving).</p></div>
+   <button class="go" onclick="generate()">Reveal my numbers &#10022;</button>
+   <div class="err" id="err"></div>
+ </div>
+
+ <div id="results"></div>
+</div>
+<script>
+/* ================= CONFIG — EDIT THESE ================= */
+const CONFIG={ previewMode:true, /* set false before going live */
+  price:"RM 75", checkoutURL:"https://your-gumroad-or-stripe-link.example", accessCode:"NUMBERS2026" };
+/* ======================================================= */
+
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const rev=x=>x-Math.floor(x/360)*360;
+const sin=x=>Math.sin(x*D2R),cos=x=>Math.cos(x*D2R),tan=x=>Math.tan(x*D2R);
+const atan2=(y,x)=>Math.atan2(y,x)*R2D;
+const K=["Ari","Tau","Gem","Can","Leo","Vir","Lib","Sco","Sag","Cap","Aqu","Pis"];
+const FULL={Ari:"Aries",Tau:"Taurus",Gem:"Gemini",Can:"Cancer",Leo:"Leo",Vir:"Virgo",Lib:"Libra",Sco:"Scorpio",Sag:"Sagittarius",Cap:"Capricorn",Aqu:"Aquarius",Pis:"Pisces"};
+const ELEMENT={Ari:"Fire",Leo:"Fire",Sag:"Fire",Tau:"Earth",Vir:"Earth",Cap:"Earth",Gem:"Air",Lib:"Air",Aqu:"Air",Can:"Water",Sco:"Water",Pis:"Water"};
+const MODE={Ari:"Cardinal",Can:"Cardinal",Lib:"Cardinal",Cap:"Cardinal",Tau:"Fixed",Leo:"Fixed",Sco:"Fixed",Aqu:"Fixed",Gem:"Dual",Vir:"Dual",Sag:"Dual",Pis:"Dual"};
+const sgn=l=>K[Math.floor(rev(l)/30)];
+const nav=l=>K[Math.floor(rev(l)/(10/3))%12];
+function kep(M,e){M=rev(M);let E=M+(e*R2D)*sin(M)*(1+e*cos(M));for(let k=0;k<12;k++){const d=(E-(e*R2D)*sin(E)-M)/(1-e*cos(E));E-=d;if(Math.abs(d)<1e-7)break;}return E;}
+function he(N,i,w,a,e,M){const E=kep(M,e);const xv=a*(cos(E)-e),yv=a*Math.sqrt(1-e*e)*sin(E);const v=atan2(yv,xv),r=Math.sqrt(xv*xv+yv*yv);
+  return{xh:r*(cos(N)*cos(v+w)-sin(N)*sin(v+w)*cos(i)),yh:r*(sin(N)*cos(v+w)+cos(N)*sin(v+w)*cos(i))};}
+function chart(Y,M,D,UT,lat,lonE){
+  const d=367*Y-Math.floor(7*(Y+Math.floor((M+9)/12))/4)+Math.floor(275*M/9)+D-730530+UT/24;
+  const ecl=23.4393-3.563e-7*d, ayan=23.853+0.0139644*(d/365.25);
+  const ws=282.9404+4.70935e-5*d,es=0.016709-1.151e-9*d,Ms=rev(356.0470+0.9856002585*d);
+  const Es=Ms+(es*R2D)*sin(Ms)*(1+es*cos(Ms));
+  const vs=atan2(Math.sqrt(1-es*es)*sin(Es),cos(Es)-es),rs=Math.sqrt(Math.pow(cos(Es)-es,2)+Math.pow(Math.sqrt(1-es*es)*sin(Es),2));
+  const lonsun=rev(vs+ws),xs=rs*cos(lonsun),ys=rs*sin(lonsun),Ls=rev(Ms+ws);
+  const Nm=125.1228-0.0529538083*d,wm=318.0634+0.1643573223*d,Mm=rev(115.3654+13.0649929509*d);
+  const m=he(Nm,5.1454,wm,60.2666,0.054900,Mm);let mlon=atan2(m.yh,m.xh);
+  const Lm=rev(Mm+wm+Nm),Dm=rev(Lm-Ls),F=rev(Lm-Nm);
+  mlon+=-1.274*sin(Mm-2*Dm)+0.658*sin(2*Dm)-0.186*sin(Ms)-0.059*sin(2*Mm-2*Dm)-0.057*sin(Mm-2*Dm+Ms)
+    +0.053*sin(Mm+2*Dm)+0.046*sin(2*Dm-Ms)+0.041*sin(Mm-Ms)-0.035*sin(Dm)-0.031*sin(Mm+Ms)-0.015*sin(2*F-2*Dm)+0.011*sin(Mm-4*Dm);
+  const pl=(N,i,w,a,e,Mp)=>{const h=he(N,i,w,a,e,rev(Mp));return atan2(h.yh+ys,h.xh+xs);};
+  const me=pl(48.3313+3.24587e-5*d,7.0047+5.00e-8*d,29.1241+1.01444e-5*d,0.387098,0.205635+5.59e-10*d,168.6562+4.0923344368*d);
+  const ve=pl(76.6799+2.46590e-5*d,3.3946+2.75e-8*d,54.8910+1.38374e-5*d,0.723330,0.006773-1.302e-9*d,48.0052+1.6021302244*d);
+  const ma=pl(49.5574+2.11081e-5*d,1.8497-1.78e-8*d,286.5016+2.92961e-5*d,1.523688,0.093405+2.516e-9*d,18.6021+0.5240207766*d);
+  const mJ=rev(19.8950+0.0830853001*d),mS=rev(316.9670+0.0334442282*d);
+  let ju=pl(100.4542+2.76854e-5*d,1.3030-1.557e-7*d,273.8777+1.64505e-5*d,5.20256,0.048498+4.469e-9*d,mJ);
+  let sa=pl(113.6634+2.38980e-5*d,2.4886-1.081e-7*d,339.3939+2.97661e-5*d,9.55475,0.055546-9.499e-9*d,mS);
+  ju+=-0.332*sin(2*mJ-5*mS-67.6)-0.056*sin(2*mJ-2*mS+21)+0.042*sin(3*mJ-5*mS+21)-0.036*sin(mJ-2*mS)+0.022*cos(mJ-mS)+0.023*sin(2*mJ-3*mS+52)-0.016*sin(mJ-5*mS-69);
+  sa+=0.812*sin(2*mJ-5*mS-67.6)-0.229*cos(2*mJ-4*mS-2)+0.119*sin(mJ-2*mS-3)+0.046*sin(2*mJ-6*mS-69)+0.014*sin(mJ-3*mS+32);
+  const GMST0=rev(Ls+180)/15,LST=rev((GMST0+UT+lonE/15)*15);
+  const asc=rev(atan2(cos(LST),-(sin(LST)*cos(ecl)+tan(lat)*sin(ecl))));
+  const rahu=rev(Nm),sid=l=>rev(l-ayan);
+  return {sun:sid(lonsun),moon:sid(mlon),asc:sid(asc),mars:sid(ma),mercury:sid(me),
+    jupiter:sid(ju),venus:sid(ve),saturn:sid(sa),rahu:sid(rahu),ketu:sid(rahu+180)};
+}
+
+/* True historical UTC offset (hours) for an IANA zone at the birth moment.
+   Uses the browser's built-in IANA database, so pre-1982 Malaysia (+7:30),
+   daylight saving and wartime changes are handled automatically. */
+function zoneOffsetHours(zone,Y,M,D,h,mi){
+  try{
+    const guess=Date.UTC(Y,M-1,D,h,mi);
+    const fmt=new Intl.DateTimeFormat("en-US",{timeZone:zone,year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric",hour12:false});
+    let utc=guess;
+    for(let i=0;i<3;i++){ // converges within 3 passes even near DST transitions
+      const p=Object.fromEntries(fmt.formatToParts(new Date(utc)).map(x=>[x.type,x.value]));
+      const asLocal=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute,+p.second);
+      utc=utc+(guess-asLocal);
+    }
+    return (guess-utc)/3600000;
+  }catch(e){return null;}
+}
+
+/* ---------- system data (from the source deck) ---------- */
+const PLANETS=[["sun","Sun",1],["moon","Moon",2],["jupiter","Jupiter",3],["rahu","Rahu",4],["mercury","Mercury",5],
+  ["venus","Venus",6],["ketu","Ketu",7],["saturn","Saturn",8],["mars","Mars",9]];
+const PNUM=Object.fromEntries(PLANETS.map(p=>[p[0],p[2]]));
+const PNAME=Object.fromEntries(PLANETS.map(p=>[p[0],p[1]]));
+const PABBR={sun:"Su",moon:"Mo",jupiter:"Ju",rahu:"Ra",mercury:"Me",venus:"Ve",ketu:"Ke",saturn:"Sa",mars:"Ma"};
+/* Planet-in-sign relationship (deck slide 11): R ruling, I intimate, G good, B bad, W worst */
+const REL={
+ Pis:{sun:"G",moon:"G",mars:"B",mercury:"W",jupiter:"R",venus:"I",saturn:"G",rahu:"G",ketu:"G"},
+ Ari:{sun:"I",moon:"B",mars:"R",mercury:"G",jupiter:"B",venus:"G",saturn:"W",rahu:"B",ketu:"B"},
+ Tau:{sun:"B",moon:"I",mars:"G",mercury:"G",jupiter:"G",venus:"R",saturn:"G",rahu:"W",ketu:"W"},
+ Gem:{sun:"B",moon:"G",mars:"G",mercury:"R",jupiter:"G",venus:"G",saturn:"G",rahu:"G",ketu:"G"},
+ Aqu:{sun:"G",moon:"B",mars:"G",mercury:"G",jupiter:"G",venus:"G",saturn:"R",rahu:"B",ketu:"B"},
+ Can:{sun:"B",moon:"R",mars:"W",mercury:"G",jupiter:"I",venus:"B",saturn:"B",rahu:"B",ketu:"B"},
+ Cap:{sun:"B",moon:"B",mars:"I",mercury:"G",jupiter:"W",venus:"G",saturn:"R",rahu:"G",ketu:"G"},
+ Leo:{sun:"R",moon:"B",mars:"B",mercury:"B",jupiter:"G",venus:"B",saturn:"B",rahu:"B",ketu:"B"},
+ Sag:{sun:"G",moon:"G",mars:"B",mercury:"G",jupiter:"R",venus:"G",saturn:"G",rahu:"G",ketu:"G"},
+ Sco:{sun:"B",moon:"W",mars:"R",mercury:"G",jupiter:"B",venus:"G",saturn:"B",rahu:"I",ketu:"I"},
+ Lib:{sun:"W",moon:"B",mars:"G",mercury:"G",jupiter:"G",venus:"R",saturn:"I",rahu:"G",ketu:"G"},
+ Vir:{sun:"B",moon:"G",mars:"G",mercury:"I",jupiter:"G",venus:"W",saturn:"G",rahu:"G",ketu:"G"},
+};
+/* relationship -> signed tokens: R x2+, I x3+, G +, B -, W x2- */
+function tokens(k,sign){
+  const n=PNUM[k],r=REL[sign][k];
+  if(r==="R")return [n,n];
+  if(r==="I")return [n,n,n];
+  if(r==="G")return [n];
+  if(r==="B")return [-n];
+  return [-n,-n];
+}
+const REL_WORD={R:"ruling",I:"intimate",G:"good",B:"bad",W:"worst"};
+/* Chaldean letter values (deck slide 5) */
+const CHALD={a:1,i:1,j:1,q:1,y:1,b:2,k:2,r:2,c:3,g:3,l:3,s:3,d:4,m:4,t:4,e:5,h:5,n:5,x:5,u:6,v:6,w:6,o:7,z:7,p:8,f:8};
+/* Number characters (deck slides 9-10) */
+const CHAR={
+ 1:["Sun","leading & commanding","1 good &middot; 1 1 best &middot; 1 1 1 great leader &mdash; or careless"],
+ 2:["Moon","assisting & enjoying","2 good &middot; 2 2 best &middot; 2 2 2 deeply connective &mdash; or imbalanced"],
+ 3:["Jupiter","advising & guiding","3 good &middot; 3 3 best &middot; 3 3 3 wise counsellor &mdash; or compulsive"],
+ 4:["Rahu","planning & thinking","4 good &middot; 4 4 best &middot; 4 4 4 consultant &mdash; or confuser"],
+ 5:["Mercury","explaining & educating","5 good &middot; 5 5 best &middot; 5 5 5 super teacher &mdash; or talkative"],
+ 6:["Venus","fame & comfort","6 good &middot; 6 6 best &middot; more: very famous &mdash; or lethargic"],
+ 7:["Ketu","loyalty & devotion","7 good &middot; 7 7 best &middot; 7 7 7 deeply divine &mdash; or disloyal"],
+ 8:["Saturn","judging & intuition","8 good &middot; 8 8 best &middot; 8 8 8 intuitive &mdash; or misjudging"],
+ 9:["Mars","extreme & pragmatic","9 good &middot; 9 9 best &middot; more: high thinker &mdash; or impractical"],
+};
+const CELL_MEAN={4:"planning, learning and insight",9:"courage, positivity and big thinking",2:"emotional stability, connecting and assisting",
+ 3:"advising, caring, respect and counsel",5:"rationality, skill, working with anyone",7:"spiritualism, accountability and loyalty",
+ 8:"responsibility, realism and judgement",1:"commanding, leadership and confidence",6:"attraction, grace and presence"};
+/* Winning patterns: the 8 complete lines of the grid (deck slides 16-18) */
+const LINES=[[[4,9,2],"Mind line","planning, courage and connection working together"],
+ [[3,5,7],"Heart line","counsel, skill and loyalty in harmony"],
+ [[8,1,6],"Action line","judgement, leadership and grace combined"],
+ [[4,3,8],"Thought line","insight, advice and realism aligned"],
+ [[9,5,1],"Will line","courage, skill and command in force"],
+ [[2,7,6],"People line","connection, devotion and charm together"],
+ [[4,5,6],"Determination line","plan, skill and presence driving results"],
+ [[2,5,8],"Balance line","emotion, reason and judgement steadied"]];
+/* Remedies (deck slides 19-27; Sun & Rahu verbatim, others per the same navaratna tradition) */
+const REMEDY={
+ 1:{gems:"Ruby / Red Spinel / Rubellite / Red Garnet",metal:"Gold",finger:"Right hand ring finger",
+    infl:"dignity, commanding, leadership and confidence",mantra:"Om hraam hreem hroum sah sooryaaya namaha",
+    prayer:"Pray to the rising sun with the Sun mantra",food:"Citrus (orange), egg, sunflower oil & seeds, ginger, saffron, grapes, peaches; red-coloured vegetables",
+    charity:"Every Sunday, feed jaggery and wheat-based food to at least six cows or people",oils:"Saffron, orange",yoga:"Surya Namaskar"},
+ 2:{gems:"Pearl / Moonstone",metal:"Silver",finger:"Right hand little finger",
+    infl:"calm mind, emotional balance and nurturing",mantra:"Om shraam shreem shroum sah chandraaya namaha",
+    prayer:"Pray to Lord Shiva; sit in moonlight on Mondays",food:"Rice, milk, curd, coconut and white foods",
+    charity:"On Mondays, donate milk or rice to those in need",oils:"Jasmine, sandalwood",yoga:"Chandra Namaskar, Anulom Vilom"},
+ 3:{gems:"Yellow Sapphire / Citrine / Yellow Topaz",metal:"Gold",finger:"Right hand index finger",
+    infl:"wisdom, guidance and good counsel",mantra:"Om graam greem groum sah guruve namaha",
+    prayer:"Honour your guru and teachers on Thursdays",food:"Turmeric, chana dal, banana and yellow fruits",
+    charity:"On Thursdays, donate books or teach someone freely",oils:"Sandalwood",yoga:"Meditation and study"},
+ 4:{gems:"Hessonite (Gomed) / Spessartite / Orange Zircon",metal:"Silver",finger:"Right hand middle finger",
+    infl:"planning, learning and insight",mantra:"Om bhraam bhreem bhroum sah raahave namaha",
+    prayer:"Pray to Maa Durga",food:"Pure vegetarian food; no alcohol, no smoking, no non-veg",
+    charity:"Every Sunday evening, feed black-gram based food to at least four cows or people",oils:"Peppermint, lavender",yoga:"Anulom Vilom"},
+ 5:{gems:"Emerald / Green Tourmaline / Peridot",metal:"Gold",finger:"Right hand little finger",
+    infl:"speech, intellect and education",mantra:"Om braam breem broum sah budhaaya namaha",
+    prayer:"Pray to Lord Vishnu on Wednesdays",food:"Green vegetables and moong dal",
+    charity:"On Wednesdays, feed green fodder to cows",oils:"Eucalyptus, mint",yoga:"Pranayama"},
+ 6:{gems:"Diamond / White Sapphire / White Zircon",metal:"Silver or platinum",finger:"Right hand middle or ring finger",
+    infl:"charm, comfort and grace",mantra:"Om draam dreem droum sah shukraaya namaha",
+    prayer:"Pray to Goddess Lakshmi on Fridays",food:"White sweets, rice and curd",
+    charity:"On Fridays, donate white clothes or sweets",oils:"Rose, ylang-ylang",yoga:"Gentle practice and meditation"},
+ 7:{gems:"Cat's Eye (Lehsunia)",metal:"Silver",finger:"Right hand middle finger",
+    infl:"devotion, loyalty and spiritual depth",mantra:"Om sraam sreem sroum sah ketave namaha",
+    prayer:"Pray to Lord Ganesha",food:"Simple sattvic food",
+    charity:"Donate blankets to the poor",oils:"Frankincense",yoga:"Meditation, Trataka"},
+ 8:{gems:"Blue Sapphire / Amethyst / Iolite",metal:"Silver or iron",finger:"Right hand middle finger",
+    infl:"judgement, discipline and intuition",mantra:"Om praam preem proum sah shanaishcharaaya namaha",
+    prayer:"Pray to Lord Hanuman or Shani on Saturdays",food:"Sesame, black gram, mustard oil",
+    charity:"On Saturdays, feed the poor and elderly; donate black sesame",oils:"Cedarwood",yoga:"Slow, patient practice"},
+ 9:{gems:"Red Coral",metal:"Gold or copper",finger:"Right hand ring finger",
+    infl:"courage, energy and pragmatism",mantra:"Om kraam kreem kroum sah bhaumaaya namaha",
+    prayer:"Pray to Lord Hanuman or Kartikeya on Tuesdays",food:"Red lentils and dates",
+    charity:"On Tuesdays, donate red lentils",oils:"Black pepper, ginger",yoga:"Strong asana practice, regular exercise"},
+};
+/* ---------- numerology ---------- */
+const digitsOf=s=>String(s).split("").filter(c=>c>="1"&&c<="9").map(Number);
+const reduceFull=n=>{while(n>9)n=String(n).split("").reduce((a,b)=>a+ +b,0);return n;};
+function chaldean(name){let t=0,used=0;for(const ch of name.toLowerCase())if(CHALD[ch]!==undefined){t+=CHALD[ch];used++;}
+  return used?reduceFull(t):0;}
+/* ---------- South Indian grid ---------- */
+const GPOS={Pis:[1,1],Ari:[1,2],Tau:[1,3],Gem:[1,4],Can:[2,4],Leo:[3,4],Vir:[4,4],Lib:[4,3],Sco:[4,2],Sag:[4,1],Cap:[3,1],Aqu:[2,1]};
+function tok2html(t){return t.map(v=>`<span class="${v>0?'pos':'neg'}">${v>0?'+':''}${v}</span>`).join(" ");}
+function gridHTML(map,lagna,label,numeric){
+  let cells="";
+  K.forEach(s=>{const [r,c]=GPOS[s];const content=(map[s]||[]).join(" ");
+    cells+=`<div class="cell${s===lagna?' lagna':''}" style="grid-row:${r};grid-column:${c}"><span class="sn">${s}${s===lagna?' \u2022Asc':''}</span><div class="pl">${content}</div></div>`;});
+  cells+=`<div class="cell center" style="grid-row:2/4;grid-column:2/4">${label}</div>`;
+  return `<div class="grid">${cells}</div>`;
+}
+/* ---------- UI ---------- */
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let LAST=null,SELPLACE=null,MANUAL=false,MAP=null,PIN=null;
+function init(){
+  const mo=document.getElementById("month");mo.add(new Option("Month\u2026",""));MONTHS.forEach((m,i)=>mo.add(new Option(m,i+1)));
+  mo.classList.add("ph");mo.onchange=()=>mo.classList.toggle("ph",mo.value==="");
+  const pq=document.getElementById("placeq");
+  pq.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchPlace();}});
+}
+function toggleManual(){MANUAL=!MANUAL;document.getElementById("customgeo").classList.toggle("hidden",!MANUAL);
+  if(MANUAL){SELPLACE=null;document.getElementById("placesel").textContent="";document.getElementById("placeresults").innerHTML="";initMap();}}
+function initMap(){
+  if(MAP||typeof L==="undefined"||!document.getElementById("pickmap"))return;
+  try{
+    MAP=L.map("pickmap").setView([3.14,101.69],5); /* opens over Malaysia */
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OpenStreetMap contributors"}).addTo(MAP);
+    MAP.on("click",e=>{
+      const la=e.latlng.lat,lo=((e.latlng.lng+180)%360+360)%360-180;
+      if(PIN)PIN.setLatLng(e.latlng);else PIN=L.marker(e.latlng).addTo(MAP);
+      document.getElementById("lat").value=la.toFixed(4);
+      document.getElementById("lon").value=lo.toFixed(4);
+      document.getElementById("tz").value=Math.round(lo/15*2)/2;
+    });
+    setTimeout(()=>MAP.invalidateSize(),150); /* fix tiles after unhide */
+  }catch(e){MAP=null;}
+}
+async function searchPlace(){
+  const q=val("placeq").trim(),box=document.getElementById("placeresults"),err=document.getElementById("err");
+  err.textContent="";if(!q){err.textContent="Type a city name to search.";return;}
+  box.innerHTML='<p class="hint">Searching\u2026</p>';
+  try{
+    const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=8&language=en&format=json");
+    const data=await r.json();
+    const res=(data.results||[]);
+    if(!res.length){box.innerHTML='<p class="hint">No places found \u2014 try a different spelling, or enter coordinates manually.</p>';return;}
+    box.innerHTML=res.map((p,i)=>{const parts=[p.name,p.admin1,p.country].filter(Boolean).join(", ");
+      return `<button type="button" class="place" onclick="pickPlace(${i})">${parts} <small>(${p.latitude.toFixed(2)}, ${p.longitude.toFixed(2)})</small></button>`;}).join("");
+    window._geo=res;
+  }catch(e){box.innerHTML='<p class="hint">Search needs an internet connection and couldn\u2019t reach the location service \u2014 you can enter coordinates manually instead.</p>';}
+}
+function pickPlace(i){
+  const p=window._geo[i];MANUAL=false;
+  SELPLACE={name:[p.name,p.admin1,p.country].filter(Boolean).join(", "),lat:p.latitude,lon:p.longitude,tzName:p.timezone||null};
+  document.getElementById("placeresults").innerHTML="";
+  document.getElementById("placeq").value=SELPLACE.name;
+  document.getElementById("placesel").innerHTML="&#10003; "+SELPLACE.name+" \u2014 exact coordinates locked in";
+  document.getElementById("customgeo").classList.add("hidden");
+}
+const val=id=>document.getElementById(id).value;
+function generate(){
+  const err=document.getElementById("err");err.textContent="";
+  const rawName=val("name").trim().slice(0,80);
+  const name=rawName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const day=+val("day"),year=+val("year"),month=+val("month");
+  const hv=val("hour"),mv=val("minute");
+  const hour=hv===""?12:+hv, minute=mv===""?0:+mv;
+  if(!day||!year||!month){err.textContent="Enter your full birth date to continue.";return;}
+  const probe=new Date(Date.UTC(year,month-1,day));
+  if(probe.getUTCFullYear()!==year||probe.getUTCMonth()!==month-1||probe.getUTCDate()!==day){err.textContent="That date doesn't exist \u2014 please check the day and month.";return;}
+  if(year<1900||year>new Date().getFullYear()){err.textContent="Please enter a birth year between 1900 and now.";return;}
+  if(hour<0||hour>23||minute<0||minute>59||isNaN(hour)||isNaN(minute)){err.textContent="Please check the birth time (hour 0\u201323, minute 0\u201359).";return;}
+  let lat,lon,tz;
+  if(MANUAL){lat=+val("lat");lon=+val("lon");tz=+val("tz");
+    if(isNaN(lat)||isNaN(lon)||isNaN(tz)){err.textContent="Enter latitude, longitude and UTC offset.";return;}
+    if(lat<-90||lat>90||lon<-180||lon>180||tz<-12||tz>14){err.textContent="Please check the values: latitude \u00b190, longitude \u00b1180, UTC offset \u221212 to +14.";return;}}
+  else{
+    if(!SELPLACE){err.textContent="Please search and select your birth place (or enter coordinates manually).";return;}
+    lat=SELPLACE.lat;lon=SELPLACE.lon;
+    tz=SELPLACE.tzName?zoneOffsetHours(SELPLACE.tzName,year,month,day,hour,minute):null;
+    if(tz===null)tz=Math.round(lon/15*2)/2; /* estimate from longitude if timezone unknown */
+  }
+  const u=new Date(Date.UTC(year,month-1,day,hour,minute)-tz*3600*1000);
+  const c=chart(u.getUTCFullYear(),u.getUTCMonth()+1,u.getUTCDate(),u.getUTCHours()+u.getUTCMinutes()/60,lat,lon);
+  /* numbers */
+  const emotional=reduceFull(day);
+  const life=reduceFull(digitsOf(`${day}${month}${year}`).reduce((a,b)=>a+b,0));
+  const supporting=name?chaldean(rawName):0;
+  /* charts: planet placement + signed numeric tokens */
+  const lagD1=sgn(c.asc),lagD9=nav(c.asc);
+  const degStr=l=>{const w=rev(l)%30,dd=Math.floor(w),mm=Math.floor((w-dd)*60);return dd+"\u00b0"+String(mm).padStart(2,"0")+"'";};
+  const rasi={};
+  (rasi[lagD1]=rasi[lagD1]||[]).push("Asc "+degStr(c.asc));
+  const d1={},d9={},n1={},n9={},rels=[];
+  const gridTok={};for(let i=1;i<=9;i++)gridTok[i]=[];
+  PLANETS.forEach(([k])=>{
+    const s1=sgn(c[k]),s9=nav(c[k]);
+    (rasi[s1]=rasi[s1]||[]).push(PABBR[k]+" "+degStr(c[k]));
+    (d1[s1]=d1[s1]||[]).push(PABBR[k]);(d9[s9]=d9[s9]||[]).push(PABBR[k]);
+    const t1=tokens(k,s1),t9=tokens(k,s9);
+    (n1[s1]=n1[s1]||[]).push(tok2html(t1));(n9[s9]=n9[s9]||[]).push(tok2html(t9));
+    gridTok[PNUM[k]].push(...t1,...t9);
+    rels.push({k,name:PNAME[k],s1,r1:REL[s1][k],s9,r9:REL[s9][k]});
+  });
+  /* merged grid analysis */
+  const net={},present=[],missing=[],negative=[];
+  for(let n=1;n<=9;n++){net[n]=gridTok[n].reduce((a,b)=>a+b,0);
+    if(gridTok[n].length===0)missing.push(n);
+    else if(net[n]<0)negative.push(n);
+    else present.push(n);}
+  const wins=LINES.map(([nums,nm,desc])=>({nums,nm,desc,on:nums.every(n=>gridTok[n].length&&net[n]>0)}));
+  const needy=[...missing,...negative];
+  LAST={name:name||"You",rawName,c,emotional,life,supporting,lagD1,lagD9,rasi,place:MANUAL?`${lat.toFixed(2)}, ${lon.toFixed(2)}`:(SELPLACE?SELPLACE.name:""),d1,d9,n1,n9,gridTok,net,present,missing,negative,wins,needy,rels};
+  render(CONFIG.previewMode);
+}
+function render(unlock){
+  const L=LAST;
+  const numHTML=`<div class="nums">
+    <div class="num"><div class="v">${L.emotional}</div><div class="t">Emotional</div><div class="d">from your birth day &mdash; feelings &amp; instincts</div></div>
+    <div class="num"><div class="v">${L.life}</div><div class="t">Life</div><div class="d">from your full birth date &mdash; your path</div></div>
+    ${L.supporting?`<div class="num"><div class="v">${L.supporting}</div><div class="t">Supporting</div><div class="d">from your name's letters &mdash; your support</div></div>`:""}</div>`;
+  const chartsHTML=`<div class="charts">
+    <div class="chartbox"><div class="clab" style="color:var(--violet)">FATE &mdash; birth chart</div>${gridHTML(L.d1,L.lagD1,"FATE")}</div>
+    <div class="chartbox"><div class="clab" style="color:var(--teal)">FREEWILL &mdash; inner chart</div>${gridHTML(L.d9,L.lagD9,"FREEWILL")}</div></div>`;
+  let html=`<div class="glass"><p class="eyebrow">Step 1</p><h2>${L.name} &mdash; Your Core Numbers</h2>
+      <p class="whatis">Emotional and Life numbers come from your date of birth; the Supporting number comes from the letters of your name (each letter carries a planet's number).</p>${numHTML}</div>
+    <div class="glass"><p class="eyebrow">Step 2</p><h2>Your Birth Chart &mdash; Rasi</h2>
+      <p class="whatis">The sky at the moment of your birth${L.place?`, computed for ${L.place}`:""} &mdash; every planet with its exact degree in its sign, in the traditional South Indian style. The highlighted box is your Ascendant (Lagna).</p>
+      <div style="max-width:430px;margin:0 auto">${gridHTML(L.rasi,L.lagD1,"RASI")}</div>
+      <p class="legend">Su Sun &middot; Mo Moon &middot; Ju Jupiter &middot; Ra Rahu &middot; Me Mercury &middot; Ve Venus &middot; Ke Ketu &middot; Sa Saturn &middot; Ma Mars</p></div>
+    <div class="glass"><p class="eyebrow">Step 3</p><h2>Your Fate &amp; Freewill Charts</h2>
+      <p class="whatis">The Fate chart is your Rasi (outer life as given); the Freewill chart is the Navamsa (your deeper potential, developed through effort).</p>${chartsHTML}</div>`;
+  if(unlock){
+    const numericHTML=`<div class="charts">
+      <div class="chartbox"><div class="clab" style="color:var(--violet)">FATE &mdash; numeric</div>${gridHTML(L.n1,L.lagD1,"FATE")}</div>
+      <div class="chartbox"><div class="clab" style="color:var(--teal)">FREEWILL &mdash; numeric</div>${gridHTML(L.n9,L.lagD9,"FREEWILL")}</div></div>
+      <p class="legend"><span style="color:var(--teal);font-weight:700">+ green</span> well-placed &middot; <span style="color:var(--red);font-weight:700">&minus; red</span> challenged &middot; doubled = ruling its sign &middot; tripled = intimate (exalted)</p>`;
+    const relRows=L.rels.map(r=>`<div class="kv"><b>${r.name} (${PNUM[r.k]})</b> &mdash; ${FULL[r.s1]} in fate (${REL_WORD[r.r1]}), ${FULL[r.s9]} in freewill (${REL_WORD[r.r9]}).</div>`).join("");
+    const order=[4,9,2,3,5,7,8,1,6];
+    const loshu=order.map(n=>{const t=L.gridTok[n];const cls=t.length===0?"miss":(L.net[n]<0?"neg":(L.net[n]===0?"neu":"pos"));
+      return `<div class="lc ${cls}"><div class="n">${n}</div><div class="tok">${t.length?tok2html(t):"&mdash;"}</div><div class="pn">${CHAR[n][0]}</div></div>`;}).join("");
+    const readMiss=L.missing.map(n=>`<b>${n} ${CHAR[n][0]}</b> &mdash; absent from your grid; ${CELL_MEAN[n]} is a quality to consciously build.`);
+    const winsHTML=L.wins.map(w=>`<div class="line ${w.on?'on':''}"><span class="nm">${w.nm} (${w.nums.join("-")})</span><span class="st">${w.on?"FORMED \u2014 "+w.desc:"not yet formed"}</span></div>`).join("");
+    const formedCount=L.wins.filter(w=>w.on).length;
+    const remHTML=L.needy.length?L.needy.map(n=>{const r=REMEDY[n];
+      return `<div class="rem"><h3>${n} &middot; ${CHAR[n][0]}</h3>
+        <p><b>Gems:</b> ${r.gems} &middot; <b>Metal:</b> ${r.metal} &middot; <b>Finger:</b> ${r.finger}</p>
+        <p><b>The influence:</b> ${r.infl}.</p>
+        <p><b>Mantra:</b> <i>${r.mantra}</i> &middot; <b>Prayer:</b> ${r.prayer}.</p>
+        <p><b>Food:</b> ${r.food}.</p>
+        <p><b>Charity:</b> ${r.charity}. &middot; <b>Essential oils:</b> ${r.oils}. &middot; <b>Yoga:</b> ${r.yoga}.</p></div>`;}).join("")
+      :`<p class="sec">Every number in your grid is present and positive &mdash; a rare, well-supported chart. No remedies are called for.</p>`;
+    html+=`<div class="glass"><p class="eyebrow">Step 4</p><h2>Your Numeric Charts</h2>
+        <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative.</p>${numericHTML}
+        <p class="lead">How each planet sits</p>${relRows}</div>
+      <div class="glass"><p class="eyebrow">Step 5</p><h2>Your Vedic Numerology Grid</h2>
+        <p class="whatis">All your signed numbers from both charts, gathered onto the ancient 3&times;3 grid. Green cells are strengths, red cells are strained, white cells are neutral (balanced), faded cells are missing.</p>
+        <div class="loshu">${loshu}</div>
+        ${readMiss.length?`<p class="lead">Missing</p><div class="sec">${readMiss.map(t=>`<p>${t}</p>`).join("")}</div>`:""}</div>
+      <div class="glass"><p class="eyebrow">Step 6</p><h2>Your Winning Patterns</h2>
+        <p class="whatis">The eight complete lines of the grid. A line forms when all three of its numbers are present and positive &mdash; ${formedCount} of 8 are formed in your chart.</p>${winsHTML}</div>
+      <div class="glass"><p class="eyebrow">Step 7</p><h2>Remedies</h2>
+        <p class="whatis">Traditional supports for your missing or strained numbers &mdash; gems, mantra, prayer, food, charity, oils and yoga for each planet. Offered as tradition and reflection, not as guarantees.</p>${remHTML}</div>
+      <button class="go" onclick="window.print()">Save my full reading as PDF &#11015;</button>`;
+  }else{
+    html+=`<div class="glass"><div class="lock"><p class="eyebrow">Full reading</p>
+      <div style="font-size:16px;font-weight:700">Unlock your complete reading</div>
+      <p style="color:var(--ink2);font-size:13px;margin:8px 0 2px">Your signed numeric charts, the full Vedic numerology grid, your winning patterns, and personalised remedies for every weak or missing number &mdash; plus a printable PDF.</p>
+      <div class="price">${CONFIG.price}</div>
+      <button class="buy" onclick="window.open(CONFIG.checkoutURL,'_blank')">Unlock full reading</button>
+      <div class="unlockrow"><input id="code" placeholder="Access code" autocomplete="off"><button class="small" onclick="tryUnlock()">Unlock</button></div>
+      <div class="err" id="codeerr"></div></div></div>`;
+  }
+  document.getElementById("results").innerHTML=html;
+  document.getElementById("results").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function tryUnlock(){const v=document.getElementById("code").value.trim();
+  if(v.toUpperCase()===CONFIG.accessCode.toUpperCase())render(true);
+  else document.getElementById("codeerr").textContent="That code didn't match your purchase.";}
+init();
+</script>
