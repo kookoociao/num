@@ -463,14 +463,15 @@ function generate(){
   /* each -n cancels one +n in the same cell */
   const rawTok={};for(let n=1;n<=9;n++){rawTok[n]=gridTok[n];const k=gridTok[n].reduce((a,v)=>a+Math.sign(v),0);gridTok[n]=Array(Math.abs(k)).fill(k>0?n:-n);}
   /* merged grid analysis */
-  const net={},present=[],missing=[],negative=[];
+  const net={},present=[],missing=[],negative=[],neutral=[];
   for(let n=1;n<=9;n++){net[n]=gridTok[n].reduce((a,b)=>a+b,0);
     if(rawTok[n].length===0)missing.push(n);
     else if(net[n]<0)negative.push(n);
+    else if(net[n]===0)neutral.push(n);
     else present.push(n);}
   const wins=LINES.map(([nums,nm,desc])=>({nums,nm,desc,on:nums.every(n=>net[n]>0)}));
-  const needy=[...missing,...negative];
-  LAST={name:name||"You",rawName,c,emotional,life,supporting,lagD1,lagD9,rasi,place:MANUAL?`${lat.toFixed(2)}, ${lon.toFixed(2)}`:(SELPLACE?SELPLACE.name:""),d1,d9,n1,n9,gridTok,rawTok,src,net,present,missing,negative,wins,needy,rels};
+  const needy=[...missing,...negative,...neutral].sort((a,b)=>a-b); /* remedies: missing, strained and neutral numbers */
+  LAST={name:name||"You",rawName,c,emotional,life,supporting,lagD1,lagD9,rasi,place:MANUAL?`${lat.toFixed(2)}, ${lon.toFixed(2)}`:(SELPLACE?SELPLACE.name:""),d1,d9,n1,n9,gridTok,rawTok,src,net,present,missing,negative,neutral,wins,needy,rels};
   render(CONFIG.previewMode);
 }
 function render(unlock){
@@ -499,31 +500,29 @@ function render(unlock){
     const order=[4,9,2,3,5,7,8,1,6];
     const loshu=order.map(n=>{const t=L.gridTok[n],raw=L.rawTok[n];const cls=raw.length===0?"miss":(L.net[n]<0?"neg":(L.net[n]===0?"neu":"pos"));
       return `<div class="lc ${cls}"><div class="n">${n}</div><div class="tok">${t.length?tok2html(t):(raw.length?"0":"&mdash;")}</div><div class="pn">${CHAR[n][0]}</div></div>`;}).join("");
-    const fmt=t=>t.map(v=>(v>0?"+":"&minus;")+Math.abs(v)).join(" ");
-    const workings=order.map(n=>`<p><b>${n}:</b> ${L.src[n].length?L.src[n].map(([lab,t])=>`${lab} ${fmt(t)}`).join(" &middot; "):"nothing"} &rarr; <b>${L.gridTok[n].length?fmt(L.gridTok[n]):(L.rawTok[n].length?"0 (cancelled out)":"missing")}</b></p>`).join("");
     const readMiss=L.missing.map(n=>`<b>${n} ${CHAR[n][0]}</b> &mdash; absent from your grid; ${CELL_MEAN[n]} is a quality to consciously build.`);
     const winsHTML=L.wins.map(w=>`<div class="line ${w.on?'on':''}"><span class="nm">${w.nm} (${w.nums.join("-")})</span><span class="st">${w.on?"FORMED \u2014 "+w.desc:"not yet formed"}</span></div>`).join("");
     const formedCount=L.wins.filter(w=>w.on).length;
     const remHTML=L.needy.length?L.needy.map(n=>{const r=REMEDY[n];
-      return `<div class="rem"><h3>${n} &middot; ${CHAR[n][0]}</h3>
+      const why=L.missing.includes(n)?"missing":(L.negative.includes(n)?"under strain":"neutral");
+      return `<div class="rem"><h3>${n} &middot; ${CHAR[n][0]} <span style="font-family:system-ui,sans-serif;font-size:11px;font-weight:600;color:var(--ink2)">(${why})</span></h3>
         <p><b>Gems:</b> ${r.gems} &middot; <b>Metal:</b> ${r.metal} &middot; <b>Finger:</b> ${r.finger}</p>
         <p><b>The influence:</b> ${r.infl}.</p>
         <p><b>Mantra:</b> <i>${r.mantra}</i> &middot; <b>Prayer:</b> ${r.prayer}.</p>
         <p><b>Food:</b> ${r.food}.</p>
         <p><b>Charity:</b> ${r.charity}. &middot; <b>Essential oils:</b> ${r.oils}. &middot; <b>Yoga:</b> ${r.yoga}.</p></div>`;}).join("")
-      :`<p class="sec">Every number in your grid is present and positive &mdash; a rare, well-supported chart. No remedies are called for.</p>`;
+      :`<p class="sec">Every number in your grid is positive &mdash; a rare, well-supported chart. No remedies are called for.</p>`;
     html+=`<div class="glass"><p class="eyebrow">Step 4</p><h2>Your Numeric Charts</h2>
         <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative. In the Fate chart, any planet in the 6th, 8th or 12th box from your Ascendant (the difficult houses) gets one minus of its own number added &mdash; e.g. +9 +9 becomes +9 +9 &minus;9 = +9, and +5 becomes +5 &minus;5 = 0. Planets that are already negative stay as they are (&minus;5 stays &minus;5). The Freewill numeric chart shows only those same 6th/8th/12th planets, and only their positive numbers.</p>${numericHTML}
         <p class="lead">How each planet sits</p>${relRows}</div>
       <div class="glass"><p class="eyebrow">Step 5</p><h2>Your Vedic Numerology Grid</h2>
         <p class="whatis">Your grid is filled with every number from the Fate numeric chart, the Freewill numbers of planets in the Fate 6th/8th/12th boxes, and your three core numbers (Emotional, Life and Supporting) as positives. Then each &minus; cancels one + of the same number. Green cells are strengths, red cells are strained, white cells cancelled out to zero, faded cells are missing.</p>
         <div class="loshu">${loshu}</div>
-        <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--violet);font-size:12.5px;font-weight:600">Show how each cell was worked out</summary><div class="sec" style="margin-top:6px">${workings}</div></details>
         ${readMiss.length?`<p class="lead">Missing</p><div class="sec">${readMiss.map(t=>`<p>${t}</p>`).join("")}</div>`:""}</div>
       <div class="glass"><p class="eyebrow">Step 6</p><h2>Your Winning Patterns</h2>
         <p class="whatis">The eight complete lines of the grid. A line forms when all three of its numbers are present and positive &mdash; ${formedCount} of 8 are formed in your chart.</p>${winsHTML}</div>
       <div class="glass"><p class="eyebrow">Step 7</p><h2>Remedies</h2>
-        <p class="whatis">Traditional supports for your missing or strained numbers &mdash; gems, mantra, prayer, food, charity, oils and yoga for each planet. Offered as tradition and reflection, not as guarantees.</p>${remHTML}</div>
+        <p class="whatis">Traditional supports for your missing, strained and neutral numbers &mdash; gems, mantra, prayer, food, charity, oils and yoga for each planet. Offered as tradition and reflection, not as guarantees.</p>${remHTML}</div>
       <button class="go" onclick="window.print()">Save my full reading as PDF &#11015;</button>`;
   }else{
     html+=`<div class="glass"><div class="lock"><p class="eyebrow">Full reading</p>
