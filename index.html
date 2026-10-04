@@ -127,17 +127,17 @@
 
  <div class="glass" id="form-card">
    <p class="eyebrow">Your details</p>
-   <label>Full name (as per records)</label><input id="name" placeholder="e.g. Prabhu" autocomplete="off">
+   <label>Full name (as per records)</label><input id="name" placeholder="e.g. Prabhu" autocomplete="off" maxlength="80">
    <div class="row">
-     <div><label>Day</label><input id="day" type="number" min="1" max="31" placeholder="18"></div>
+     <div><label>Day</label><select id="day"></select></div>
      <div><label>Month</label><select id="month"></select></div>
-     <div><label>Year</label><input id="year" type="number" min="1900" max="2026" placeholder="1972"></div>
+     <div><label>Year</label><select id="year"></select></div>
    </div>
    <div class="row">
-     <div><label>Hour (24h)</label><input id="hour" type="number" min="0" max="23" placeholder="9"></div>
-     <div><label>Minute</label><input id="minute" type="number" min="0" max="59" placeholder="30"></div>
+     <div><label>Hour</label><select id="hour"></select></div>
+     <div><label>Minute</label><select id="minute"></select></div>
    </div>
-   <p class="hint">Time and place set your Ascendant and charts precisely. Unknown time? Use 12:00.</p>
+   <p class="hint">Time and place set your Ascendant and charts precisely. Don’t know your birth time? Leave Hour and Minute blank and 12:00 noon is used.</p>
    <label>Birth place</label>
    <div class="row"><div style="flex:3"><input id="placeq" placeholder="Type a city, e.g. Shah Alam" autocomplete="off"></div>
      <div style="flex:1"><button type="button" class="small" style="width:100%;padding:11px 8px" onclick="searchPlace()">Search</button></div></div>
@@ -148,10 +148,10 @@
      <p class="hint" style="margin:8px 0 6px">&#128205; Tap the map on your birth place &mdash; the coordinates fill in automatically.</p>
      <div id="pickmap"></div>
      <div class="row" style="margin-top:8px">
-     <div><label>Latitude</label><input id="lat" type="number" step="0.0001"></div>
-     <div><label>Longitude</label><input id="lon" type="number" step="0.0001"></div>
-     <div><label>UTC offset</label><input id="tz" type="number" step="0.5"></div></div>
-     <p class="hint">The UTC offset is estimated from the pin &mdash; adjust if needed (Malaysia = 8; add +1 for daylight saving).</p></div>
+     <div><label>Latitude</label><input id="lat" type="number" step="0.0001" min="-90" max="90" inputmode="decimal" placeholder="3.1073"></div>
+     <div><label>Longitude</label><input id="lon" type="number" step="0.0001" min="-180" max="180" inputmode="decimal" placeholder="101.6067"></div>
+     <div><label>UTC offset</label><select id="tz"></select></div></div>
+     <p class="hint">Latitude is limited to &minus;90 to 90 and longitude to &minus;180 to 180. The UTC offset is estimated from the pin &mdash; adjust if needed (Malaysia today = +08:00; before 1982 Peninsular Malaysia used +07:30).</p></div>
    <button class="go" onclick="generate()">Reveal my numbers &#10022;</button>
    <div class="err" id="err"></div>
  </div>
@@ -336,9 +336,37 @@ function gridHTML(map,lagna,label,numeric){
 /* ---------- UI ---------- */
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 let LAST=null,SELPLACE=null,MANUAL=false,MAP=null,PIN=null;
+/* Real-world UTC offsets (incl. half/quarter hours, e.g. pre-1982 Malaysia +07:30) */
+const TZ_OPTS=[-12,-11,-10,-9.5,-9,-8,-7,-6,-5,-4,-3.5,-3,-2,-1,0,1,2,3,3.5,4,4.5,5,5.5,5.75,6,6.5,7,7.5,8,8.75,9,9.5,10,10.5,11,12,12.75,13,14];
+const tzLabel=v=>{const s=v<0?"\u2212":"+",a=Math.abs(v),h=Math.floor(a),m=Math.round((a-h)*60);return "UTC"+s+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");};
+function setTZ(v){const best=TZ_OPTS.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a);const el=document.getElementById("tz");el.value=String(best);el.classList.remove("ph");}
+function fillSelect(id,placeholder,items){const el=document.getElementById(id);el.innerHTML="";el.add(new Option(placeholder,""));
+  items.forEach(([label,value])=>el.add(new Option(label,value)));el.value="";el.classList.add("ph");
+  if(!el._phBound){el.addEventListener("change",()=>el.classList.toggle("ph",el.value===""));el._phBound=true;}}
+/* Day list follows the chosen month & year, so impossible dates (Feb 30, Apr 31) can't be picked */
+function refreshDays(){
+  const dEl=document.getElementById("day"),m=+val("month"),y=+val("year")||2000;
+  const max=m?new Date(Date.UTC(y,m,0)).getUTCDate():31,keep=+dEl.value;
+  fillSelect("day","Day\u2026",Array.from({length:max},(_,i)=>[String(i+1),String(i+1)]));
+  if(keep&&keep<=max){dEl.value=String(keep);dEl.classList.remove("ph");}else{dEl.value="";}
+}
+/* Typed coordinates are kept inside their real range */
+function clampField(id,lo,hi){const el=document.getElementById(id);
+  const fix=()=>{if(el.value==="")return;let v=+el.value;if(isNaN(v)){el.value="";return;}
+    if(v<lo)v=lo;if(v>hi)v=hi;el.value=String(Math.round(v*10000)/10000);};
+  el.addEventListener("change",fix);el.addEventListener("blur",fix);
+  el.addEventListener("keydown",e=>{if(["e","E","+"].includes(e.key))e.preventDefault();});}
 function init(){
   const mo=document.getElementById("month");mo.add(new Option("Month\u2026",""));MONTHS.forEach((m,i)=>mo.add(new Option(m,i+1)));
-  mo.classList.add("ph");mo.onchange=()=>mo.classList.toggle("ph",mo.value==="");
+  mo.classList.add("ph");mo.onchange=()=>{mo.classList.toggle("ph",mo.value==="");refreshDays();};
+  const thisYear=new Date().getFullYear(),years=[];for(let y=thisYear;y>=1900;y--)years.push([String(y),String(y)]);
+  fillSelect("year","Year\u2026",years);document.getElementById("year").addEventListener("change",refreshDays);
+  refreshDays();
+  const ampm=h=>h===0?"12 AM":h<12?h+" AM":h===12?"12 PM":(h-12)+" PM";
+  fillSelect("hour","Hour\u2026",Array.from({length:24},(_,h)=>[String(h).padStart(2,"0")+"  ("+ampm(h)+")",String(h)]));
+  fillSelect("minute","Min\u2026",Array.from({length:60},(_,m)=>[String(m).padStart(2,"0"),String(m)]));
+  fillSelect("tz","Offset\u2026",TZ_OPTS.map(v=>[tzLabel(v),String(v)]));
+  clampField("lat",-90,90);clampField("lon",-180,180);
   const pq=document.getElementById("placeq");
   pq.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchPlace();}});
 }
@@ -354,7 +382,7 @@ function initMap(){
       if(PIN)PIN.setLatLng(e.latlng);else PIN=L.marker(e.latlng).addTo(MAP);
       document.getElementById("lat").value=la.toFixed(4);
       document.getElementById("lon").value=lo.toFixed(4);
-      document.getElementById("tz").value=Math.round(lo/15*2)/2;
+      setTZ(lo/15);
     });
     setTimeout(()=>MAP.invalidateSize(),150); /* fix tiles after unhide */
   }catch(e){MAP=null;}
@@ -416,25 +444,32 @@ function generate(){
   const rasi={};
   (rasi[lagD1]=rasi[lagD1]||[]).push("Asc "+degStr(c.asc));
   const d1={},d9={},n1={},n9={},rels=[];
-  const gridTok={};for(let i=1;i<=9;i++)gridTok[i]=[];
+  const gridTok={},src={};for(let i=1;i<=9;i++){gridTok[i]=[];src[i]=[];}
   PLANETS.forEach(([k])=>{
     const s1=sgn(c[k]),s9=nav(c[k]);
     (rasi[s1]=rasi[s1]||[]).push(PABBR[k]+" "+degStr(c[k]));
     (d1[s1]=d1[s1]||[]).push(PABBR[k]);(d9[s9]=d9[s9]||[]).push(PABBR[k]);
-    const t1=tokens(k,s1),t9=tokens(k,s9);
-    (n1[s1]=n1[s1]||[]).push(tok2html(t1));(n9[s9]=n9[s9]||[]).push(tok2html(t9));
+    const h1=(K.indexOf(s1)-K.indexOf(lagD1)+12)%12+1; /* house counted from Asc = 1 */
+    const dus=[6,8,12].includes(h1);
+    const t1=dus?[-PNUM[k]]:tokens(k,s1);                  /* Fate: 6th/8th/12th planets show a single negative number */
+    const t9=dus?tokens(k,s9).filter(v=>v>0):[];           /* Freewill: only Fate 6th/8th/12th planets, positive numbers only */
+    (n1[s1]=n1[s1]||[]).push(tok2html(t1));if(t9.length)(n9[s9]=n9[s9]||[]).push(tok2html(t9));
     gridTok[PNUM[k]].push(...t1,...t9);
-    rels.push({k,name:PNAME[k],s1,r1:REL[s1][k],s9,r9:REL[s9][k]});
+    src[PNUM[k]].push(["Fate "+PNAME[k],t1]);if(t9.length)src[PNUM[k]].push(["Freewill "+PNAME[k],t9]);
+    rels.push({k,name:PNAME[k],s1,r1:REL[s1][k],s9,r9:REL[s9][k],h1,dus});
   });
+  [["Emotional",emotional],["Life",life],["Supporting",supporting]].forEach(([lab,n])=>{if(n>=1&&n<=9){gridTok[n].push(n);src[n].push([lab+" number",[n]]);}}); /* core numbers as positives */
+  /* each -n cancels one +n in the same cell */
+  const rawTok={};for(let n=1;n<=9;n++){rawTok[n]=gridTok[n];const k=gridTok[n].reduce((a,v)=>a+Math.sign(v),0);gridTok[n]=Array(Math.abs(k)).fill(k>0?n:-n);}
   /* merged grid analysis */
   const net={},present=[],missing=[],negative=[];
   for(let n=1;n<=9;n++){net[n]=gridTok[n].reduce((a,b)=>a+b,0);
-    if(gridTok[n].length===0)missing.push(n);
+    if(rawTok[n].length===0)missing.push(n);
     else if(net[n]<0)negative.push(n);
     else present.push(n);}
-  const wins=LINES.map(([nums,nm,desc])=>({nums,nm,desc,on:nums.every(n=>gridTok[n].length&&net[n]>0)}));
+  const wins=LINES.map(([nums,nm,desc])=>({nums,nm,desc,on:nums.every(n=>net[n]>0)}));
   const needy=[...missing,...negative];
-  LAST={name:name||"You",rawName,c,emotional,life,supporting,lagD1,lagD9,rasi,place:MANUAL?`${lat.toFixed(2)}, ${lon.toFixed(2)}`:(SELPLACE?SELPLACE.name:""),d1,d9,n1,n9,gridTok,net,present,missing,negative,wins,needy,rels};
+  LAST={name:name||"You",rawName,c,emotional,life,supporting,lagD1,lagD9,rasi,place:MANUAL?`${lat.toFixed(2)}, ${lon.toFixed(2)}`:(SELPLACE?SELPLACE.name:""),d1,d9,n1,n9,gridTok,rawTok,src,net,present,missing,negative,wins,needy,rels};
   render(CONFIG.previewMode);
 }
 function render(unlock){
@@ -458,11 +493,13 @@ function render(unlock){
     const numericHTML=`<div class="charts">
       <div class="chartbox"><div class="clab" style="color:var(--violet)">FATE &mdash; numeric</div>${gridHTML(L.n1,L.lagD1,"FATE")}</div>
       <div class="chartbox"><div class="clab" style="color:var(--teal)">FREEWILL &mdash; numeric</div>${gridHTML(L.n9,L.lagD9,"FREEWILL")}</div></div>
-      <p class="legend"><span style="color:var(--teal);font-weight:700">+ green</span> well-placed &middot; <span style="color:var(--red);font-weight:700">&minus; red</span> challenged &middot; doubled = ruling its sign &middot; tripled = intimate (exalted)</p>`;
-    const relRows=L.rels.map(r=>`<div class="kv"><b>${r.name} (${PNUM[r.k]})</b> &mdash; ${FULL[r.s1]} in fate (${REL_WORD[r.r1]}), ${FULL[r.s9]} in freewill (${REL_WORD[r.r9]}).</div>`).join("");
+      <p class="legend"><span style="color:var(--teal);font-weight:700">+ green</span> well-placed &middot; <span style="color:var(--red);font-weight:700">&minus; red</span> challenged &middot; doubled = ruling its sign &middot; tripled = intimate (exalted) &middot; in the Fate chart, planets in the 6th, 8th or 12th house from the Asc show a single negative number</p>`;
+    const relRows=L.rels.map(r=>`<div class="kv"><b>${r.name} (${PNUM[r.k]})</b> &mdash; ${FULL[r.s1]} in fate (${REL_WORD[r.r1]}${r.dus?`, ${r.h1}th house from Asc &mdash; shown as &minus;${PNUM[r.k]} only`:""}), ${FULL[r.s9]} in freewill (${REL_WORD[r.r9]}${r.dus?(tokens(r.k,r.s9).some(v=>v>0)?` &mdash; counts ${tokens(r.k,r.s9).filter(v=>v>0).map(v=>"+"+v).join(" ")}`:" &mdash; negative, not counted"):""}).</div>`).join("");
     const order=[4,9,2,3,5,7,8,1,6];
-    const loshu=order.map(n=>{const t=L.gridTok[n];const cls=t.length===0?"miss":(L.net[n]<0?"neg":(L.net[n]===0?"neu":"pos"));
-      return `<div class="lc ${cls}"><div class="n">${n}</div><div class="tok">${t.length?tok2html(t):"&mdash;"}</div><div class="pn">${CHAR[n][0]}</div></div>`;}).join("");
+    const loshu=order.map(n=>{const t=L.gridTok[n],raw=L.rawTok[n];const cls=raw.length===0?"miss":(L.net[n]<0?"neg":(L.net[n]===0?"neu":"pos"));
+      return `<div class="lc ${cls}"><div class="n">${n}</div><div class="tok">${t.length?tok2html(t):(raw.length?"0":"&mdash;")}</div><div class="pn">${CHAR[n][0]}</div></div>`;}).join("");
+    const fmt=t=>t.map(v=>(v>0?"+":"&minus;")+Math.abs(v)).join(" ");
+    const workings=order.map(n=>`<p><b>${n}:</b> ${L.src[n].length?L.src[n].map(([lab,t])=>`${lab} ${fmt(t)}`).join(" &middot; "):"nothing"} &rarr; <b>${L.gridTok[n].length?fmt(L.gridTok[n]):(L.rawTok[n].length?"0 (cancelled out)":"missing")}</b></p>`).join("");
     const readMiss=L.missing.map(n=>`<b>${n} ${CHAR[n][0]}</b> &mdash; absent from your grid; ${CELL_MEAN[n]} is a quality to consciously build.`);
     const winsHTML=L.wins.map(w=>`<div class="line ${w.on?'on':''}"><span class="nm">${w.nm} (${w.nums.join("-")})</span><span class="st">${w.on?"FORMED \u2014 "+w.desc:"not yet formed"}</span></div>`).join("");
     const formedCount=L.wins.filter(w=>w.on).length;
@@ -475,11 +512,12 @@ function render(unlock){
         <p><b>Charity:</b> ${r.charity}. &middot; <b>Essential oils:</b> ${r.oils}. &middot; <b>Yoga:</b> ${r.yoga}.</p></div>`;}).join("")
       :`<p class="sec">Every number in your grid is present and positive &mdash; a rare, well-supported chart. No remedies are called for.</p>`;
     html+=`<div class="glass"><p class="eyebrow">Step 4</p><h2>Your Numeric Charts</h2>
-        <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative.</p>${numericHTML}
+        <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative. In the Fate chart, any planet in the 6th, 8th or 12th box from your Ascendant (the difficult houses) shows only one negative number &mdash; e.g. +2 becomes &minus;2, and +9 +9 becomes just &minus;9. The Freewill numeric chart shows only those same 6th/8th/12th planets, and only their positive numbers.</p>${numericHTML}
         <p class="lead">How each planet sits</p>${relRows}</div>
       <div class="glass"><p class="eyebrow">Step 5</p><h2>Your Vedic Numerology Grid</h2>
-        <p class="whatis">All your signed numbers from both charts, gathered onto the ancient 3&times;3 grid. Green cells are strengths, red cells are strained, white cells are neutral (balanced), faded cells are missing.</p>
+        <p class="whatis">Your grid is filled with every number from the Fate numeric chart, the Freewill numbers of planets in the Fate 6th/8th/12th boxes, and your three core numbers (Emotional, Life and Supporting) as positives. Then each &minus; cancels one + of the same number. Green cells are strengths, red cells are strained, white cells cancelled out to zero, faded cells are missing.</p>
         <div class="loshu">${loshu}</div>
+        <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--violet);font-size:12.5px;font-weight:600">Show how each cell was worked out</summary><div class="sec" style="margin-top:6px">${workings}</div></details>
         ${readMiss.length?`<p class="lead">Missing</p><div class="sec">${readMiss.map(t=>`<p>${t}</p>`).join("")}</div>`:""}</div>
       <div class="glass"><p class="eyebrow">Step 6</p><h2>Your Winning Patterns</h2>
         <p class="whatis">The eight complete lines of the grid. A line forms when all three of its numbers are present and positive &mdash; ${formedCount} of 8 are formed in your chart.</p>${winsHTML}</div>
