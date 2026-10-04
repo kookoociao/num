@@ -451,9 +451,10 @@ function generate(){
     (d1[s1]=d1[s1]||[]).push(PABBR[k]);(d9[s9]=d9[s9]||[]).push(PABBR[k]);
     const h1=(K.indexOf(s1)-K.indexOf(lagD1)+12)%12+1; /* house counted from Asc = 1 */
     const dus=[6,8,12].includes(h1);
-    const t1=dus?[-PNUM[k]]:tokens(k,s1);                  /* Fate: 6th/8th/12th planets show a single negative number */
+    const b1=tokens(k,s1),t1=(dus&&b1[0]>0)?[...b1,-PNUM[k]]:b1;  /* Fate: 6th/8th/12th planets with + numbers get one minus added; negatives stay as they are */
+    const t1net=t1.reduce((a,v)=>a+Math.sign(v),0),t1show=Array(Math.abs(t1net)).fill(t1net>0?PNUM[k]:-PNUM[k]); /* e.g. +9 +9 -9 shows as +9 */
     const t9=dus?tokens(k,s9).filter(v=>v>0):[];           /* Freewill: only Fate 6th/8th/12th planets, positive numbers only */
-    (n1[s1]=n1[s1]||[]).push(tok2html(t1));if(t9.length)(n9[s9]=n9[s9]||[]).push(tok2html(t9));
+    (n1[s1]=n1[s1]||[]).push(t1show.length?tok2html(t1show):"0");if(t9.length)(n9[s9]=n9[s9]||[]).push(tok2html(t9));
     gridTok[PNUM[k]].push(...t1,...t9);
     src[PNUM[k]].push(["Fate "+PNAME[k],t1]);if(t9.length)src[PNUM[k]].push(["Freewill "+PNAME[k],t9]);
     rels.push({k,name:PNAME[k],s1,r1:REL[s1][k],s9,r9:REL[s9][k],h1,dus});
@@ -493,8 +494,8 @@ function render(unlock){
     const numericHTML=`<div class="charts">
       <div class="chartbox"><div class="clab" style="color:var(--violet)">FATE &mdash; numeric</div>${gridHTML(L.n1,L.lagD1,"FATE")}</div>
       <div class="chartbox"><div class="clab" style="color:var(--teal)">FREEWILL &mdash; numeric</div>${gridHTML(L.n9,L.lagD9,"FREEWILL")}</div></div>
-      <p class="legend"><span style="color:var(--teal);font-weight:700">+ green</span> well-placed &middot; <span style="color:var(--red);font-weight:700">&minus; red</span> challenged &middot; doubled = ruling its sign &middot; tripled = intimate (exalted) &middot; in the Fate chart, planets in the 6th, 8th or 12th house from the Asc show a single negative number</p>`;
-    const relRows=L.rels.map(r=>`<div class="kv"><b>${r.name} (${PNUM[r.k]})</b> &mdash; ${FULL[r.s1]} in fate (${REL_WORD[r.r1]}${r.dus?`, ${r.h1}th house from Asc &mdash; shown as &minus;${PNUM[r.k]} only`:""}), ${FULL[r.s9]} in freewill (${REL_WORD[r.r9]}${r.dus?(tokens(r.k,r.s9).some(v=>v>0)?` &mdash; counts ${tokens(r.k,r.s9).filter(v=>v>0).map(v=>"+"+v).join(" ")}`:" &mdash; negative, not counted"):""}).</div>`).join("");
+      <p class="legend"><span style="color:var(--teal);font-weight:700">+ green</span> well-placed &middot; <span style="color:var(--red);font-weight:700">&minus; red</span> challenged &middot; doubled = ruling its sign &middot; tripled = intimate (exalted) &middot; in the Fate chart, planets in the 6th, 8th or 12th house from the Asc get one minus added (if positive)</p>`;
+    const relRows=L.rels.map(r=>`<div class="kv"><b>${r.name} (${PNUM[r.k]})</b> &mdash; ${FULL[r.s1]} in fate (${REL_WORD[r.r1]}${r.dus?`, ${r.h1}th house from Asc &mdash; ${tokens(r.k,r.s1)[0]>0?`one &minus;${PNUM[r.k]} added`:"already negative, unchanged"}`:""}), ${FULL[r.s9]} in freewill (${REL_WORD[r.r9]}${r.dus?(tokens(r.k,r.s9).some(v=>v>0)?` &mdash; counts ${tokens(r.k,r.s9).filter(v=>v>0).map(v=>"+"+v).join(" ")}`:" &mdash; negative, not counted"):""}).</div>`).join("");
     const order=[4,9,2,3,5,7,8,1,6];
     const loshu=order.map(n=>{const t=L.gridTok[n],raw=L.rawTok[n];const cls=raw.length===0?"miss":(L.net[n]<0?"neg":(L.net[n]===0?"neu":"pos"));
       return `<div class="lc ${cls}"><div class="n">${n}</div><div class="tok">${t.length?tok2html(t):(raw.length?"0":"&mdash;")}</div><div class="pn">${CHAR[n][0]}</div></div>`;}).join("");
@@ -512,7 +513,7 @@ function render(unlock){
         <p><b>Charity:</b> ${r.charity}. &middot; <b>Essential oils:</b> ${r.oils}. &middot; <b>Yoga:</b> ${r.yoga}.</p></div>`;}).join("")
       :`<p class="sec">Every number in your grid is present and positive &mdash; a rare, well-supported chart. No remedies are called for.</p>`;
     html+=`<div class="glass"><p class="eyebrow">Step 4</p><h2>Your Numeric Charts</h2>
-        <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative. In the Fate chart, any planet in the 6th, 8th or 12th box from your Ascendant (the difficult houses) shows only one negative number &mdash; e.g. +2 becomes &minus;2, and +9 +9 becomes just &minus;9. The Freewill numeric chart shows only those same 6th/8th/12th planets, and only their positive numbers.</p>${numericHTML}
+        <p class="whatis">Each planet becomes its number, signed by how it sits in its sign: ruling planets are doubled, intimate (exalted) tripled, well-placed positive, badly-placed negative, worst doubled negative. In the Fate chart, any planet in the 6th, 8th or 12th box from your Ascendant (the difficult houses) gets one minus of its own number added &mdash; e.g. +9 +9 becomes +9 +9 &minus;9 = +9, and +5 becomes +5 &minus;5 = 0. Planets that are already negative stay as they are (&minus;5 stays &minus;5). The Freewill numeric chart shows only those same 6th/8th/12th planets, and only their positive numbers.</p>${numericHTML}
         <p class="lead">How each planet sits</p>${relRows}</div>
       <div class="glass"><p class="eyebrow">Step 5</p><h2>Your Vedic Numerology Grid</h2>
         <p class="whatis">Your grid is filled with every number from the Fate numeric chart, the Freewill numbers of planets in the Fate 6th/8th/12th boxes, and your three core numbers (Emotional, Life and Supporting) as positives. Then each &minus; cancels one + of the same number. Green cells are strengths, red cells are strained, white cells cancelled out to zero, faded cells are missing.</p>
